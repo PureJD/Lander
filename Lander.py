@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random 
+import math
 
 def generate_stars(num_stars):
     stars = []
@@ -39,13 +40,19 @@ pygame.display.set_caption("Lunar Lander")
 
 # Load the sprite
 sprite = pygame.image.load("starship_small.png")
+mount_sprite = pygame.image.load("mount_small.png")
 stars = generate_stars(100)
 terrain = generate_terrain()
 ship_x_pos, ship_y_pos = 300, 300
 
 #Create an object around the sprite for collision detection and rotation
 sprite_rect = sprite.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+#Position argument for sprit to stop it jumping across the screen 
+ship_x_pos, ship_y_pos = WIDTH // 2, HEIGHT // 2
+#Initial angle of the ship (Can be used for physics as matches angles in physics)
 angle = 0
+
+mount_rect = mount_sprite.get_rect(center=(WIDTH // 2, terrain[0][1] - 140))
 
 # Dictionary to store the state of keys (pressed or not pressed)
 keys_pressed = {}
@@ -66,11 +73,22 @@ while running:
 
     # Update the ship's position based on continuous key presses
     if pygame.K_LEFT in keys_pressed:
-        angle += 0.1  
-    if pygame.K_RIGHT in keys_pressed:
-        angle -= 0.1
-    if pygame.K_SPACE in keys_pressed:
-       ship_y_pos -= 0.1
+        angle += 0.5 
+    elif pygame.K_RIGHT in keys_pressed:
+        angle -= 0.5
+    elif pygame.K_SPACE in keys_pressed:
+    # Define the magnitude of the velocity (how fast the ship moves)
+        velocity_magnitude = 1  # Adjust this value as needed
+        # Calculate the horizontal and vertical components of velocity based on the angle
+            # Calculate the horizontal and vertical components of velocity based on the angle
+        velocity_x = velocity_magnitude * math.cos(math.radians(angle - 90))  # Horizontal component
+        velocity_y = -velocity_magnitude * math.sin(math.radians(angle - 90))  # Vertical component
+        # Update ship's position based on velocity
+        ship_x_pos -= velocity_x
+        ship_y_pos -= velocity_y
+        # Update the position of the sprite_rect object
+        sprite_rect.centerx = ship_x_pos
+        sprite_rect.centery = ship_y_pos
 
     # Rotate the sprite
     rotated_sprite = pygame.transform.rotate(sprite, angle)
@@ -81,6 +99,7 @@ while running:
     # Clear the screen
     screen.fill((0, 0, 0))
 
+
     # Draw the stars
     for star in stars:
         pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
@@ -90,9 +109,17 @@ while running:
 
     # Draw the rotated sprite
     screen.blit(rotated_sprite, rotated_rect)
+    screen.blit(mount_sprite, mount_rect)
+
+    #Gravit physics 
+    gravity_strength = 0.3
+    ship_x_pos += gravity_strength
+    ship_y_pos += gravity_strength
+    sprite_rect.centerx = ship_x_pos
+    sprite_rect.centery = ship_y_pos
 
     
-    
+    print(angle)
 
     # Update display
     pygame.display.flip()
