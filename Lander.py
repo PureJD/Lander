@@ -29,9 +29,9 @@ def generate_terrain():
     terrain[-1] = (WIDTH, HEIGHT)
     return terrain
 
-
 # Initialize Pygame
 pygame.init()
+pygame.mixer.init()
 
 # Set up the window
 WIDTH, HEIGHT = 1000, 800
@@ -39,8 +39,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Lunar Lander")
 
 # Load the sprite
-sprite = pygame.image.load("starship_small.png")
-mount_sprite = pygame.image.load("mount_small.png")
+thruster_sound = pygame.mixer.Sound("sounds/thruster.wav")
+thruster_sound.set_volume(0.05)
+sprite = pygame.image.load("images/starship_small.png")
+mount_sprite = pygame.image.load("images/mount_small.png")
+thrust_sprite_original = pygame.image.load("images/thrust.png")
 stars = generate_stars(100)
 terrain = generate_terrain()
 ship_x_pos, ship_y_pos = 300, 300
@@ -53,6 +56,7 @@ ship_x_pos, ship_y_pos = WIDTH // 2, HEIGHT // 2
 angle = 0
 
 mount_rect = mount_sprite.get_rect(center=(WIDTH // 2, terrain[0][1] - 140))
+thrust_rect = thrust_sprite_original.get_rect(center=(WIDTH // 2, HEIGHT - 100))
 
 # Dictionary to store the state of keys (pressed or not pressed)
 keys_pressed = {}
@@ -77,10 +81,10 @@ while running:
     elif pygame.K_RIGHT in keys_pressed:
         angle -= 0.5
     elif pygame.K_SPACE in keys_pressed:
-    # Define the magnitude of the velocity (how fast the ship moves)
+        pygame.mixer.Sound.play(thruster_sound)
+        # Define the magnitude of the velocity (how fast the ship moves)
         velocity_magnitude = 1  # Adjust this value as needed
         # Calculate the horizontal and vertical components of velocity based on the angle
-            # Calculate the horizontal and vertical components of velocity based on the angle
         velocity_x = velocity_magnitude * math.cos(math.radians(angle - 90))  # Horizontal component
         velocity_y = -velocity_magnitude * math.sin(math.radians(angle - 90))  # Vertical component
         # Update ship's position based on velocity
@@ -89,6 +93,10 @@ while running:
         # Update the position of the sprite_rect object
         sprite_rect.centerx = ship_x_pos
         sprite_rect.centery = ship_y_pos
+        # Update thrust sprite position and angle
+        thrust_rect.centerx = ship_x_pos  # Align thrust sprite center with ship center
+        thrust_rect.centery = ship_y_pos + 40  # Position thrust sprite below the ship
+        thrust_sprite = pygame.transform.rotate(thrust_sprite_original, angle)  # Rotate thrust sprite
 
     # Rotate the sprite
     rotated_sprite = pygame.transform.rotate(sprite, angle)
@@ -99,27 +107,20 @@ while running:
     # Clear the screen
     screen.fill((0, 0, 0))
 
-
-    # Draw the stars
+    # Draw the stars, terrain, rotated sprite, mount sprite, and thrust sprite
     for star in stars:
         pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
-
-    # Draw the terrain
-    pygame.draw.polygon(screen, (100, 100, 100), terrain)
-
-    # Draw the rotated sprite
+    pygame.draw.polygon(screen, (40, 40, 40), terrain)
     screen.blit(rotated_sprite, rotated_rect)
     screen.blit(mount_sprite, mount_rect)
+    screen.blit(thrust_sprite_original, thrust_rect)
 
-    #Gravit physics 
+    # Gravity physics 
     gravity_strength = 0.3
     ship_x_pos += gravity_strength
     ship_y_pos += gravity_strength
     sprite_rect.centerx = ship_x_pos
     sprite_rect.centery = ship_y_pos
-
-    
-    print(angle)
 
     # Update display
     pygame.display.flip()
