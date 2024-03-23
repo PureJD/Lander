@@ -1,2 +1,2 @@
 # Lander
-A lunar lander game created in Pygame
+(Unfinished Project) A lunar lander game created in Pygame
